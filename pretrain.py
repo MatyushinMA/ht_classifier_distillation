@@ -56,6 +56,13 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 model = get_model(num_classes=1, sample_size=224, width_mult=1.0)
+enc_parameters = 0
+dec_parameters = 0
+for p in model.features.parameters():
+    enc_parameters += p.numel()
+for p in model.inv_features.parameters():
+    dec_parameters += p.numel()
+print('Encoder: %d, decoder: %d, total: %d' % (enc_parameters, dec_parameters, enc_parameters + dec_parameters))
 
 sometimes = lambda aug: iaa.Sometimes(0.8, aug)
 aug = iaa.Sequential([sometimes(iaa.AdditiveGaussianNoise(scale=args.noise_magnitude*255))])
@@ -74,7 +81,7 @@ for epoch in range(args.epochs):
         model.train()
         input, correct = input.cuda(), correct.cuda()
         optimizer.zero_grad()
-        output = model(input)
+        output = model.inv_features(model.features(input))
         loss = loss_fn(output, correct)
         loss_reg = torch.tensor(0.0).to(device)
         for param in model.parameters():
@@ -97,7 +104,7 @@ for epoch in range(args.epochs):
                 model.eval()
                 for j, (einput, ecorrect) in enumerate(test_ds):
                     einput, ecorrect = einput.to(device), ecorrect.to(device)
-                    eoutput = model(einput)
+                    eoutput = model.inv_features(model.features(einput))
                     prec = loss_fn(eoutput, ecorrect)
                     precs.update(prec)
         if i % args.print_freq == 0 and i > 0:
