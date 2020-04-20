@@ -155,7 +155,7 @@ class PretrainDataset(Dataset):
             height_scale = random.uniform(0.8, 1.2)
             width *= width_scale
             height *= height_scale
-            width, height = list(map(int, [width, height])
+            width, height = list(map(int, [width, height]))
             if width > self.resizer_size[0]:
                 width = self.resizer_size[0]
             if height > self.resizer_size[1]:
