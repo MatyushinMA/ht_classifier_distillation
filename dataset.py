@@ -10,6 +10,7 @@ import random
 from tqdm import tqdm
 import torch
 import spatial_aug
+from threading import Lock
 
 def make_dataset():
     labels = {}
