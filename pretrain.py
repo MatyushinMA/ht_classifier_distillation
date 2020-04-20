@@ -3,6 +3,7 @@ import torch.nn as nn
 from mobilenetv2 import get_model, filter_state_dict_by_layer
 import imgaug.augmenters as iaa
 from dataset import make_pretrain_datasets
+import shutil
 
 class args:
     lr = 0.01
