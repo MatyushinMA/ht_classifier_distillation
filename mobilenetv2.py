@@ -7,6 +7,7 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from collections import OrderedDict
 
 
 def filter_state_dict_by_layer(od, layer_name):
