@@ -175,6 +175,7 @@ class PretrainDataset(Dataset):
             frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
             frames.append(self.resizer(images=frame))
         frames = np.stack(frames)
+        return frames
 
     def _get_sample(self, part_index, index):
         if self.unpacked_index != part_index:
