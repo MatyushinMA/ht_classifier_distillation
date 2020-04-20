@@ -147,8 +147,8 @@ class PretrainDataset(Dataset):
         begin_x = random.randint(0, self.resizer_size[0] - width)
         begin_y = random.randint(0, self.resizer_size[1] - height)
         frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
-        frames = [self.resizer(images=frame)]
-        for i in range(32):
+        frames = [self.resizer(images=frame)[0, :, :, :]]
+        for i in range(31):
             shift_x = random.randint(-20, 20)
             shift_y = random.randint(-20, 20)
             width_scale = random.uniform(0.8, 1.2)
@@ -173,7 +173,7 @@ class PretrainDataset(Dataset):
             begin_x -= max(0, begin_x + width - self.resizer_size[0])
             begin_y -= max(0, begin_y + height - self.resizer_size[1])
             frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
-            frames.append(self.resizer(images=frame))
+            frames.append(self.resizer(images=frame)[0, :, :, :])
         frames = np.stack(frames)
         return frames
 
