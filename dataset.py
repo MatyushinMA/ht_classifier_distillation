@@ -151,10 +151,11 @@ class PretrainDataset(Dataset):
         for i in range(32):
             shift_x = random.randint(-20, 20)
             shift_y = random.randint(-20, 20)
-            width_scale = random.random(0.8, 1.2)
-            height_scale = random.random(0.8, 1.2)
+            width_scale = random.uniform(0.8, 1.2)
+            height_scale = random.uniform(0.8, 1.2)
             width *= width_scale
             height *= height_scale
+            width, height = list(map(int, [width, height])
             if width > self.resizer_size[0]:
                 width = self.resizer_size[0]
             if height > self.resizer_size[1]:
