@@ -3,6 +3,7 @@ import torch.nn as nn
 from dataset import make_dataset
 from sklearn.metrics import f1_score
 import pickle
+from mobilenetv2 import get_model
 from resnext import resnet101
 import numpy as np
 from collections import OrderedDict
@@ -17,12 +18,13 @@ for w_name in checkpoint['state_dict']:
 big_model.load_state_dict(weights)
 big_model.cuda()
 
-model = 
+model = get_model(num_classes=27, sample_size=224, width_mult=1.0)
 try:
     checkpoint = torch.load('./best_classifier_checkpoint.pth.tar', map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint)
 except:
-    pass
+    checkpoint = torch.load('./pretrain/models/imagenet_mobilenetv2_autoencoder.pth')
+    model.load_feature_detector_from_autoencoder(checkpoint['state_dict'])
 model.cuda()
 
 train_ds, test_ds = make_dataset()

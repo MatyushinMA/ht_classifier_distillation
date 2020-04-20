@@ -122,7 +122,9 @@ def make_pretrain_datasets(path='/tmp/imagenet/compressed_dataset', train_test=0
     return train_dataset, test_dataset
 
 class PretrainDataset(Dataset):
-    def __init__(self, parts, aug=None, resize=(540, 540), name='Dataset', batch_size=64):
+    def __init__(self, parts, aug=None, resize=(224, 224), name='Dataset', batch_size=64):
+        self.mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1).cuda()
+        self.std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1).cuda()
         self.batch_size = batch_size
         self.aug = aug
         self.name = name
@@ -139,6 +141,33 @@ class PretrainDataset(Dataset):
         self.unpacked_index = None
         print('%s loaded (%d)' % (name, len(self)))
 
+    def _get_frames_from_img(self, img):
+        width = random.randint(75, 150)
+        height = random.randint(75, 150)
+        begin_x = random.randint(0, self.resizer_size[0] - width)
+        begin_y = random.randint(0, self.resizer_size[1] - height)
+        frame = img[0, begin_y:begin_y+height, begin_x:begin_x+width, :]
+        frames = [frame]
+        for i in range(32):
+            shift_x = random.randint(-20, 20)
+            shift_y = random.randint(-20, 20)
+            width_scale = random.random(0.8, 1.2)
+            height_scale = random.random(0.8, 1.2)
+            width *= width_scale
+            height *= height_scale
+            if width > self.resizer_size[0]:
+                width = self.resizer_size[0]
+            if height > self.resizer_size[1]:
+                height = self.resizer_size[1]
+            begin_x += shift_x
+            begin_y += shift_y
+            begin_x -= max(0, begin_x + width - self.resizer_size[0])
+            begin_y -= max(0, begin_y + height - self.resizer_size[1])
+            frame = img[0, begin_y:begin_y+height, begin_x:begin_x+width, :]
+            frames.append(frame)
+        frames = np.stack(frames)
+        frames = self.resizer(images=frames)
+
     def _get_sample(self, part_index, index):
         if self.unpacked_index != part_index:
             self.unpacked_index = part_index
@@ -148,15 +177,19 @@ class PretrainDataset(Dataset):
         h, w = sample_img.shape[:2]
         sample_img = sample_img.reshape(1, h, w, 3)
         sample_img = self.resizer(images=sample_img)
-        sample = torch.from_numpy(sample_img).float()
-        sample = torch.transpose(sample, 1, 3)/255
+        sample_frames = self._get_frames_from_img(sample_img)
+        sample = torch.from_numpy(sample_frames).float()
+        sample = torch.transpose(sample, 1, 3)
+        sample = torch.transpose(sample, 0, 1)
         if self.aug:
             sample_img_aug = self.aug(images=sample_img)
-            sample_aug = torch.from_numpy(sample_img_aug).float()
-            sample_aug = torch.transpose(sample_aug, 1, 3)/255
+            aug_sample_frames = self._get_frames_from_img(sample_img_aug)
+            sample_aug = torch.from_numpy(aug_sample_frames).float()
+            sample_aug = torch.transpose(sample_aug, 1, 3)
+            sample_aug = torch.transpose(sample_aug, 0, 1)
         else:
             sample_aug = sample
-        return sample_aug[0, :, :, :], sample[0, :, :, :]
+        return sample_aug[:, :, :, :]/255, sample[:, :, :, :]/255
 
     def __getitem__(self, i):
         aug_samples = []
@@ -175,7 +208,7 @@ class PretrainDataset(Dataset):
             raise IndexError()
         aug_batch = torch.stack(aug_samples)
         sample_batch = torch.stack(samples)
-        return aug_batch, sample_batch
+        return (aug_batch - self.mean)/self.std, (sample_batch - self.mean)/self.std
 
 
     def __len__(self):
