@@ -166,6 +166,10 @@ class PretrainDataset(Dataset):
                 height = self.resizer_size[1]
             begin_x += shift_x
             begin_y += shift_y
+            if begin_x < 0:
+                begin_x = 0
+            if begin_y < 0:
+                begin_y = 0
             begin_x -= max(0, begin_x + width - self.resizer_size[0])
             begin_y -= max(0, begin_y + height - self.resizer_size[1])
             frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
