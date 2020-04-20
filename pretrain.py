@@ -28,8 +28,8 @@ def save_checkpoint(state, is_best, acc, filename='checkpoint.pth.tar'):
         shutil.copyfile(filename, 'best_%s' % filename)
 
 def get_ed_reg_loss(model):
-    e_norm = torch.tensor(0.0).to(device)
-    d_norm = torch.tensor(0.0).to(device)
+    e_norm = torch.tensor(0.0).cuda()
+    d_norm = torch.tensor(0.0).cuda()
     features_state = filter_state_dict_by_layer(model.state_dict(), 'features')
     for p_name in features_state:
         e_norm += (features_state[p_name].norm())**2
@@ -106,7 +106,7 @@ for epoch in range(args.epochs):
             with torch.no_grad():
                 model.eval()
                 for j, (einput, ecorrect) in enumerate(test_ds):
-                    einput, ecorrect = einput.to(device), ecorrect.to(device)
+                    einput, ecorrect = einput.cuda(), ecorrect.cuda()
                     eoutput = model.inv_features(model.features(einput))
                     prec = loss_fn(eoutput, ecorrect)
                     precs.update(prec)
