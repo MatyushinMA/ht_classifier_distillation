@@ -8,10 +8,10 @@ class args:
     lr = 0.01
     epochs = 100
     eval_freq = 9500
-    print_freq = 500
+    print_freq = 5
     lmbd = 1.0
     ed_lmbd = 1.0
-    batch_size = 12
+    batch_size = 6
     noise_magnitude = 0.1
 
 def _lr_step(epoch, base_lr):
@@ -32,10 +32,12 @@ def get_ed_reg_loss(model):
     d_norm = torch.tensor(0.0).cuda()
     features_state = filter_state_dict_by_layer(model.state_dict(), 'features')
     for p_name in features_state:
-        e_norm += (features_state[p_name].norm())**2
+        if features_state[p_name].requires_grad:
+            e_norm += (features_state[p_name].norm())**2
     inv_features_state = filter_state_dict_by_layer(model.state_dict(), 'inv_features')
     for p_name in inv_features_state:
-        d_norm += (inv_features_state[p_name].norm())**2
+        if inv_features_state[p_name].requires_grad:
+            d_norm += (inv_features_state[p_name].norm())**2
     ed_reg_loss = (e_norm**(0.5) - d_norm**(0.5))**2
     return ed_reg_loss
 
@@ -75,6 +77,7 @@ best_acc = float('inf')
 for epoch in range(args.epochs):
     losses = AverageMeter()
     precs = AverageMeter()
+    ed_losses = AverageMeter()
     grad_norms = AverageMeter()
     model.cuda()
     model.train()
@@ -93,6 +96,7 @@ for epoch in range(args.epochs):
         loss += loss_reg
         ed_loss = get_ed_reg_loss(model)*args.ed_lmbd
         loss += ed_loss
+        ed_losses.update(ed_loss.item())
         loss.backward()
         with torch.no_grad():
             grad_norm = 0
