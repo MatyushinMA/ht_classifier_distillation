@@ -66,7 +66,7 @@ print('Encoder: %d, decoder: %d, total: %d' % (enc_parameters, dec_parameters, e
 
 sometimes = lambda aug: iaa.Sometimes(0.8, aug)
 aug = iaa.Sequential([sometimes(iaa.AdditiveGaussianNoise(scale=args.noise_magnitude*255))])
-train_ds, test_ds = create_datasets(aug=aug, batch_size=args.batch_size)
+train_ds, test_ds = make_pretrain_datasets(aug=aug, batch_size=args.batch_size)
 optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 loss_fn = torch.nn.MSELoss()
 best_acc = float('inf')
