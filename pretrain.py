@@ -83,7 +83,7 @@ for epoch in range(args.epochs):
         optimizer.zero_grad()
         output = model.inv_features(model.features(input))
         loss = loss_fn(output, correct)
-        loss_reg = torch.tensor(0.0).to(device)
+        loss_reg = torch.tensor(0.0).cuda()
         for param in model.parameters():
             loss_reg += (torch.norm(param))**2
         loss_reg *= args.lmbd/(2*float(number_of_parameters))

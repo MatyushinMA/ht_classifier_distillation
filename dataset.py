@@ -32,10 +32,10 @@ class Dataset(object):
     def __init__(self, labels, part):
         self.resizer = iaa.Resize({'width' : 112, 'height' : 112})
         self.big_resizer = iaa.Resize({'width' : 224, 'height' : 224})
-        self.mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1).cuda()
-        self.std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1).cuda()
-        self.big_mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1).cuda()
-        self.big_std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1).cuda()
+        self.mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1)
+        self.std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1)
+        self.big_mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1)
+        self.big_std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1)
         self.samples = []
         self.targets = []
         self.batch_size = 64
@@ -123,8 +123,8 @@ def make_pretrain_datasets(path='/tmp/imagenet/compressed_dataset', train_test=0
 
 class PretrainDataset(Dataset):
     def __init__(self, parts, aug=None, resize=(224, 224), name='Dataset', batch_size=64):
-        self.mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1).cuda()
-        self.std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1).cuda()
+        self.mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1)
+        self.std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1)
         self.batch_size = batch_size
         self.aug = aug
         self.name = name
