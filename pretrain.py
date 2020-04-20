@@ -56,12 +56,14 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 model = get_model(num_classes=1, sample_size=224, width_mult=1.0)
+model.classifier.eval()
 enc_parameters = 0
 dec_parameters = 0
 for p in model.features.parameters():
     enc_parameters += p.numel()
 for p in model.inv_features.parameters():
     dec_parameters += p.numel()
+number_of_parameters = enc_parameters + dec_parameters
 print('Encoder: %d, decoder: %d, total: %d' % (enc_parameters, dec_parameters, enc_parameters + dec_parameters))
 
 sometimes = lambda aug: iaa.Sometimes(0.8, aug)
@@ -85,7 +87,8 @@ for epoch in range(args.epochs):
         loss = loss_fn(output, correct)
         loss_reg = torch.tensor(0.0).cuda()
         for param in model.parameters():
-            loss_reg += (torch.norm(param))**2
+            if param.requires_grad:
+                loss_reg += (torch.norm(param))**2
         loss_reg *= args.lmbd/(2*float(number_of_parameters))
         loss += loss_reg
         ed_loss = get_ed_reg_loss(model)*args.ed_lmbd
