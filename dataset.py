@@ -31,10 +31,10 @@ class Dataset(object):
     def __init__(self, labels, part):
         self.resizer = iaa.Resize({'width' : 112, 'height' : 112})
         self.big_resizer = iaa.Resize({'width' : 224, 'height' : 224})
-        self.mean =
-        self.std =
-        self.big_mean =
-        self.big_std =
+        self.mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1).cuda()
+        self.std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1).cuda()
+        self.big_mean = torch.tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1, 1).cuda()
+        self.big_std = torch.tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1, 1).cuda()
         self.samples = []
         self.targets = []
         self.batch_size = 64
@@ -100,7 +100,7 @@ class Dataset(object):
         batch = torch.from_numpy(batch).float()
         big_batch = torch.from_numpy(big_batch).float()
         target = torch.from_numpy(target).long()
-        return (batch - self.mean)/self.std, (big_batch - self.big_mean)/self.big_std, target
+        return (batch/255 - self.mean)/self.std, (big_batch/255 - self.big_mean)/self.big_std, target
 
     def __len__(self):
         return ceil(len(self.samples)/self.batch_size)
