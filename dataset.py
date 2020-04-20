@@ -146,8 +146,8 @@ class PretrainDataset(Dataset):
         height = random.randint(75, 150)
         begin_x = random.randint(0, self.resizer_size[0] - width)
         begin_y = random.randint(0, self.resizer_size[1] - height)
-        frame = img[0, begin_y:begin_y+height, begin_x:begin_x+width, :]
-        frames = [frame]
+        frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
+        frames = [self.resizer(images=frame)]
         for i in range(32):
             shift_x = random.randint(-20, 20)
             shift_y = random.randint(-20, 20)
@@ -164,10 +164,9 @@ class PretrainDataset(Dataset):
             begin_y += shift_y
             begin_x -= max(0, begin_x + width - self.resizer_size[0])
             begin_y -= max(0, begin_y + height - self.resizer_size[1])
-            frame = img[0, begin_y:begin_y+height, begin_x:begin_x+width, :]
-            frames.append(frame)
+            frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
+            frames.append(self.resizer(images=frame))
         frames = np.stack(frames)
-        frames = self.resizer(images=frames)
 
     def _get_sample(self, part_index, index):
         if self.unpacked_index != part_index:
