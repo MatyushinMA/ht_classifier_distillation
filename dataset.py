@@ -156,6 +156,10 @@ class PretrainDataset(Dataset):
             width *= width_scale
             height *= height_scale
             width, height = list(map(int, [width, height]))
+            if width < 75:
+                width = 75
+            if height < 75:
+                height = 75
             if width > self.resizer_size[0]:
                 width = self.resizer_size[0]
             if height > self.resizer_size[1]:
