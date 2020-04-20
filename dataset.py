@@ -207,7 +207,7 @@ class PretrainDataset(Dataset):
         sample = torch.transpose(sample, 0, 1)
         if self.aug:
             sample_img_aug = self.aug(images=sample_img)
-            aug_sample_frames = self._get_frames_from_img(sample_img_aug, seq)
+            aug_sample_frames, _ = self._get_frames_from_img(sample_img_aug, seq)
             sample_aug = torch.from_numpy(aug_sample_frames).float()
             sample_aug = torch.transpose(sample_aug, 1, 3)
             sample_aug = torch.transpose(sample_aug, 0, 1)
