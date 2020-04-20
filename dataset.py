@@ -141,41 +141,56 @@ class PretrainDataset(Dataset):
         self.unpacked_index = None
         print('%s loaded (%d)' % (name, len(self)))
 
-    def _get_frames_from_img(self, img):
-        width = random.randint(75, 150)
-        height = random.randint(75, 150)
-        begin_x = random.randint(0, self.resizer_size[0] - width)
-        begin_y = random.randint(0, self.resizer_size[1] - height)
+    def _get_frames_from_img(self, img, seq=[]):
+        _seq = []
+        if seq:
+            width = seq[0][0]
+            height = seq[0][1]
+            begin_x = seq[0][2]
+            begin_y = seq[0][3]
+        else:
+            width = random.randint(75, 150)
+            height = random.randint(75, 150)
+            begin_x = random.randint(0, self.resizer_size[0] - width)
+            begin_y = random.randint(0, self.resizer_size[1] - height)
+            _seq.append([width, height, begin_x, begin_y])
         frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
         frames = [self.resizer(images=frame)[0, :, :, :]]
         for i in range(31):
-            shift_x = random.randint(-20, 20)
-            shift_y = random.randint(-20, 20)
-            width_scale = random.uniform(0.8, 1.2)
-            height_scale = random.uniform(0.8, 1.2)
-            width *= width_scale
-            height *= height_scale
-            width, height = list(map(int, [width, height]))
-            if width < 75:
-                width = 75
-            if height < 75:
-                height = 75
-            if width > self.resizer_size[0]:
-                width = self.resizer_size[0]
-            if height > self.resizer_size[1]:
-                height = self.resizer_size[1]
-            begin_x += shift_x
-            begin_y += shift_y
-            if begin_x < 0:
-                begin_x = 0
-            if begin_y < 0:
-                begin_y = 0
-            begin_x -= max(0, begin_x + width - self.resizer_size[0])
-            begin_y -= max(0, begin_y + height - self.resizer_size[1])
+            if seq:
+                width = seq[i + 1][0]
+                height = seq[i + 1][1]
+                begin_x = seq[i + 1][2]
+                begin_y = seq[i + 1][3]
+            else:
+                shift_x = random.randint(-20, 20)
+                shift_y = random.randint(-20, 20)
+                width_scale = random.uniform(0.8, 1.2)
+                height_scale = random.uniform(0.8, 1.2)
+                width *= width_scale
+                height *= height_scale
+                width, height = list(map(int, [width, height]))
+                if width < 75:
+                    width = 75
+                if height < 75:
+                    height = 75
+                if width > self.resizer_size[0]:
+                    width = self.resizer_size[0]
+                if height > self.resizer_size[1]:
+                    height = self.resizer_size[1]
+                begin_x += shift_x
+                begin_y += shift_y
+                if begin_x < 0:
+                    begin_x = 0
+                if begin_y < 0:
+                    begin_y = 0
+                begin_x -= max(0, begin_x + width - self.resizer_size[0])
+                begin_y -= max(0, begin_y + height - self.resizer_size[1])
+                _seq.append([width, height, begin_x, begin_y])
             frame = img[:, begin_y:begin_y+height, begin_x:begin_x+width, :]
             frames.append(self.resizer(images=frame)[0, :, :, :])
         frames = np.stack(frames)
-        return frames
+        return frames, (_seq or seq)
 
     def _get_sample(self, part_index, index):
         if self.unpacked_index != part_index:
@@ -186,13 +201,13 @@ class PretrainDataset(Dataset):
         h, w = sample_img.shape[:2]
         sample_img = sample_img.reshape(1, h, w, 3)
         sample_img = self.resizer(images=sample_img)
-        sample_frames = self._get_frames_from_img(sample_img)
+        sample_frames, seq = self._get_frames_from_img(sample_img)
         sample = torch.from_numpy(sample_frames).float()
         sample = torch.transpose(sample, 1, 3)
         sample = torch.transpose(sample, 0, 1)
         if self.aug:
             sample_img_aug = self.aug(images=sample_img)
-            aug_sample_frames = self._get_frames_from_img(sample_img_aug)
+            aug_sample_frames = self._get_frames_from_img(sample_img_aug, seq)
             sample_aug = torch.from_numpy(aug_sample_frames).float()
             sample_aug = torch.transpose(sample_aug, 1, 3)
             sample_aug = torch.transpose(sample_aug, 0, 1)
