@@ -14,6 +14,7 @@ class args:
     ed_lmbd = 1.0
     batch_size = 6
     noise_magnitude = 0.1
+    pretrain_depth = 1
 
 def _lr_step(epoch, base_lr):
     return base_lr * (0.1 ** (epoch // 30))
@@ -58,7 +59,7 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-model = get_model(num_classes=1, sample_size=224, width_mult=1.0)
+model = get_model(num_classes=1, sample_size=224, width_mult=1.0, pretrain_depth=args.pretrain_depth)
 model.classifier.eval()
 enc_parameters = 0
 dec_parameters = 0
@@ -87,7 +88,7 @@ for epoch in range(args.epochs):
         model.train()
         input, correct = input.cuda(), correct.cuda()
         optimizer.zero_grad()
-        output = model.inv_features(model.features(input))
+        output = model.autoencode(input)
         loss = loss_fn(output, correct)
         loss_reg = torch.tensor(0.0).cuda()
         for param in model.parameters():
@@ -112,7 +113,7 @@ for epoch in range(args.epochs):
                 model.eval()
                 for j, (einput, ecorrect) in enumerate(test_ds):
                     einput, ecorrect = einput.cuda(), ecorrect.cuda()
-                    eoutput = model.inv_features(model.features(einput))
+                    eoutput = model.autoencode(einput)
                     prec = loss_fn(eoutput, ecorrect)
                     precs.update(prec)
         if i % args.print_freq == 0 and i > 0:
@@ -121,8 +122,8 @@ for epoch in range(args.epochs):
             'epoch' : epoch + 1,
             'state_dict' : model.state_dict(),
             'prec' : precs.avg,
-        }, precs.avg < best_acc, precs.avg, filename='mobilenetv2_checkpoint.pth')
+        }, precs.avg < best_acc, precs.avg, filename='mobilenetv2_%d_checkpoint.pth' % args.pretrain_depth)
 
     best_acc = min(precs.avg, best_acc)
     adjust_learning_rate(optimizer, epoch, args.lr)
-os.system('rm mobilenetv2_checkpoint.pth.tar')
+os.system('rm mobilenetv2_%s_checkpoint.pth.tar' % args.pretrain_depth)

@@ -129,8 +129,9 @@ class UpInvertedResidual(nn.Module):
 
 
 class MobileNetV2(nn.Module):
-    def __init__(self, num_classes=1000, sample_size=224, width_mult=1.):
+    def __init__(self, num_classes=1000, sample_size=224, width_mult=1., pretrain_depth=1):
         super(MobileNetV2, self).__init__()
+        self.pretrain_depth = pretrain_depth
         block = InvertedResidual
         upblock = UpInvertedResidual
         input_channel = 32
@@ -181,6 +182,13 @@ class MobileNetV2(nn.Module):
         x = F.avg_pool3d(x, x.data.size()[-3:])
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
+        return x
+
+    def autoencode(self, x):
+        for i in range(self.pretrain_depth):
+            x = self.features[i](x)
+        for i in range(self.pretrain_depth):
+            x = self.inv_features[-i](x)
         return x
 
     def load_feature_detector_from_autoencoder(self, weights):
