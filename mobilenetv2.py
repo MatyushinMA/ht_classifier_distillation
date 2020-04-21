@@ -188,7 +188,7 @@ class MobileNetV2(nn.Module):
         for i in range(self.pretrain_depth):
             x = self.features[i](x)
         for i in range(self.pretrain_depth):
-            x = self.inv_features[-i](x)
+            x = self.inv_features[-self.pretrain_depth+i](x)
         return x
 
     def load_feature_detector_from_autoencoder(self, weights):
