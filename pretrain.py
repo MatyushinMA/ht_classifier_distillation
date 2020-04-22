@@ -14,10 +14,10 @@ class args:
     ed_lmbd = 1.0
     batch_size = 8
     noise_magnitude = 0.1
-    pretrain_depth = 1
+    pretrain_depth = 2
 
 def _lr_step(epoch, base_lr):
-    return base_lr * (0.1 ** (epoch // 30))
+    return base_lr * (0.1 ** (epoch // 1.5))
 
 def adjust_learning_rate(optimizer, epoch, base_lr):
     lr = _lr_step(epoch, base_lr)
