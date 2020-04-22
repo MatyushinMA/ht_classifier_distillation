@@ -9,7 +9,7 @@ class args:
     lr = 0.01
     epochs = 3
     eval_freq = 13900
-    print_freq = 7000
+    print_freq = 100
     lmbd = 1.0
     ed_lmbd = 1.0
     batch_size = 8
@@ -62,10 +62,11 @@ class AverageMeter(object):
 model = get_model(num_classes=1, sample_size=224, width_mult=1.0, pretrain_depth=args.pretrain_depth)
 if args.pretrain_depth > 1:
     try:
-        checkpoint = torch.load('./best_mobilenetv2_%d_checkpoint.pth.tar', map_location=torch.device('cpu'))['state_dict']
+        checkpoint = torch.load('./best_mobilenetv2_%d_checkpoint.pth' % (args.pretrain_depth - 1), map_location=torch.device('cpu'))['state_dict']
         model.load_state_dict(checkpoint)
         print('Loaded previous pretrain step weights')
-    except:
+    except Exception as e:
+        print(e)
         print('Training from scratch')
 model.classifier.eval()
 enc_parameters = 0
@@ -134,6 +135,6 @@ while model.pretrain_depth < len(model.features):
 
         best_acc = min(precs.avg, best_acc)
         adjust_learning_rate(optimizer, epoch, args.lr)
-    os.system('rm mobilenetv2_%s_checkpoint.pth.tar' % args.pretrain_depth)
+    _ = os.system('rm mobilenetv2_%s_checkpoint.pth' % args.pretrain_depth)
     args.pretrain_depth += 1
     model.pretrain_depth = args.pretrain_depth
