@@ -81,7 +81,7 @@ sometimes = lambda aug: iaa.Sometimes(0.8, aug)
 aug = iaa.Sequential([sometimes(iaa.AdditiveGaussianNoise(scale=args.noise_magnitude*255))])
 train_ds, test_ds = make_pretrain_datasets(aug=aug, batch_size=args.batch_size)
 
-while model.pretrain_depth < len(model.features):
+while model.pretrain_depth <= len(model.features):
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
     loss_fn = torch.nn.MSELoss()
     best_acc = float('inf')
@@ -126,7 +126,7 @@ while model.pretrain_depth < len(model.features):
                         prec = loss_fn(eoutput, ecorrect)
                         precs.update(prec)
             if i % args.print_freq == 0 and i > 0:
-                print('Depth: %d\tEpoch: %d(%d/%d)\tLoss: %f\tED_loss: %f\tPrec: %f\tGrad: %f\n%s' % (args.pretrtain_depth, epoch, i, len(train_ds), losses.avg, ed_losses.avg, precs.avg, grad_norms.avg, '-'*80))
+                print('Depth: %d\tEpoch: %d(%d/%d)\tLoss: %f\tED_loss: %f\tPrec: %f\tGrad: %f\n%s' % (args.pretrain_depth, epoch, i, len(train_ds), losses.avg, ed_losses.avg, precs.avg, grad_norms.avg, '-'*80))
         save_checkpoint({
                 'epoch' : epoch + 1,
                 'state_dict' : model.state_dict(),
